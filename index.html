@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <link href="css/smoothness/jquery-ui-1.9.2.custom.css" rel="stylesheet">
+    <link href="lib/DataTables-1.10.4/media/css/jquery.dataTables.css" rel="stylesheet">
+    <link href="lib/jstree/themes/default/style.min.css" rel="stylesheet">
+
+    <!-- jquery libs -->
+    <script src="lib/jquery-1.8.3.js"></script>
+    <script src="lib/jquery-ui-1.9.2.custom.js"></script>
+
+    <!-- jquery plug-ins -->
+    <script src="lib/DataTables-1.10.4/media/js/jquery.dataTables.js"></script>
+    <script src="lib/jstree/jstree.min.js"></script>
+
+    <!-- helper libs -->
+    <script src="lib/lz4-decompress.js"></script>
+    <script src="lib/sha1.js"></script>
+    <script src="lib/protobuf/Long.js"></script>
+    <script src="lib/protobuf/ByteBufferAB.js"></script>
+    <script src="lib/protobuf/ProtoBuf.js"></script>
+    <script src="lib/jszip.min.js"></script>
+    <script src="lib/gl-matrix.js"></script>
+    <script src="lib/webgl-debug.js"></script>
+
+    <!-- layerview source -->
+    <script type="application/javascript;version=1.8" src="js/frame.js"></script>
+    <script type="application/javascript;version=1.8" src="js/common.js"></script>
+    <script type="application/javascript;version=1.8" src="js/persistence.js"></script>
+    <script type="application/javascript;version=1.8" src="js/layerview.js"></script>
+    <script type="application/javascript;version=1.8" src="js/renderer/displaylist_renderer.js"></script>
+    <script type="application/javascript;version=1.8" src="js/renderer/texturesprite_renderer.js"></script>
+    <script type="application/javascript;version=1.8" src="js/renderer/drawquad_renderer.js"></script>
+    <script type="application/javascript;version=1.8" src="js/renderer/bufferview_renderer.js"></script>
+    <script type="application/javascript;version=1.8" src="js/renderer/treeview_renderer.js"></script>
+    <script type="application/javascript;version=1.8" src="js/displaylist.js"></script>
+    <!--<script type="application/javascript;version=1.8"
+      src="js/dataprocesser_worker.js"></script>-->
+    <script type="application/javascript;version=1.8" src="js/dataprocesser_proxy.js"></script>
+    <script type="application/javascript;version=1.8" src="js/tool-bar.js"></script>
+
+    <style type="text/css">
+      body {
+        font-family: Monaco, Helvetica, Arial, sans-serif;
+        width: 100vw;
+        height: 100vh;
+        margin:0px;
+        padding:0px;
+      }
+
+      #url-address {
+        border: 1px solid #BBBBBB;
+        background: #fff
+        border-radius: 3px;
+        height: 20px;
+        margin: 5px 0px;
+        width: 25%;
+        padding-left: 5px;
+      }
+
+      .buffer-sprite {
+        position: relative;
+        background: LightGray;
+        font-size: 12px;
+        /*padding: 5px;*/
+        border: 1px solid gray;
+        box-shadow: 3px 3px 3px gray;
+        margin: 5px;
+        display: inline-block;
+        vertical-align: top;
+        font-weight: bold;
+      }
+
+      .decoration-canvas {
+        position: absolute;
+        right: 0px;
+        top: 20px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .sprite-title {
+        border-bottom: 1px solid gray;
+        padding: 5px;
+        margin: 0px;
+        width: calc(100% - 10px);
+      }
+
+      .sprite-title p {
+        margin: 0px;
+      }
+
+      .background-pattern {
+        background: white url(transparent-background.png) repeat;
+      }
+
+      .background-white {
+        background: white;
+      }
+
+      .background-black {
+        background: black;
+      }
+
+      .selected-sprite {
+        background: SteelBlue;
+      }
+
+      #left-hud-pane {
+        position: absolute;
+        left:0px;
+        top: 0px;
+        width: 80%;
+        height: 80px;
+        padding: 5px;
+      }
+
+      #right-hud-pane {
+        position: absolute;
+        right:5px;
+        top: 0px;
+        width: 30px;
+        height: 30px;
+      }
+
+      #right-hud-pane p,
+      #right-hud-pane div {
+        margin: 5px;
+        font-size: 15px;
+      }
+
+      .data-pane {
+        position: absolute;
+        border:none;
+        display: inline-block;
+        background: lightgray;
+        margin: 0px;
+        height: calc(100% - 40px);
+        top: 38px;
+        border: 1px solid gray;
+        border-right-style: none;
+        border-left-style: none;
+      }
+
+      #left-data-pane {
+        left:0%;
+        width: 300px;
+        font-size: 10px;
+      }
+
+      #right-data-pane {
+        left:300px;
+        width:calc(100% - 300px);
+      }
+
+      .invisible-layer {
+        color: LightGray;
+      }
+
+      .visible-layer {
+        color: Black;
+      }
+
+      .data-pane h3 {
+        border-right-style: none;
+        border-left-style: none;
+        text-align: center;
+        margin: 0px;
+        font-size: 15px;
+        height: 20px;
+      }
+
+      .dataTables_wrapper {
+        margin: 5px 5px 0px 5px;
+        width: calc(100% - 10px);
+        height: 300px;
+        box-sizing: border-box;
+        padding: 0px;
+      }
+
+      #layer-tree-holder {
+        margin: 0px;
+        border-width: 0px 0px 1px 0px;
+        border-color: gray;
+        border-style: solid;
+        background-color: white;
+        overflow: auto;
+        width: 100%;
+        height: calc(100% - 303px);
+      }
+
+      .resizable-left {
+        width: 20%;
+        overflow: hidden;
+      }
+
+      .resizable-right {
+        width: 80%;
+        /*overflow: auto;*/
+      }
+
+      #tool-bar {
+        margin: 0px;
+        box-sizing: border-box;
+        width: 100%;
+        height: 33px;
+        padding-left: 5px;
+        overflow:none;
+        border-width: 0px 0px 1px 1px;
+        border-color: gray;
+      }
+
+      #frame-info {
+        font-size: 13px;
+        position: absolute;
+        right: 285px;
+        top:9px;
+      }
+
+      #frame-slider {
+        position: absolute;
+        right: 15px;
+        top: 11px;
+        width: 250px;
+        height: 11px;
+        background: url(css/slider-bg.png);
+      }
+
+      #renderer-holder {
+        font-size: 10px;
+        margin: 0px;
+        box-sizing: border-box;
+        background: white;
+        width: 100%;
+        border: 1px solid gray;
+        border-top-style: none;
+        height: calc(100% - 32px);
+        overflow: auto;
+        position: relative;
+      }
+
+      #layerview-right-panel {
+        left: calc(100% - 300px);
+        position: absolute;
+        height: 100%;
+        width: 300px;
+        background-color:LightGray;
+      }
+
+      #layerview-display-list {
+        top: 0px;
+        height: calc(100% - 306px);
+        width: 100%;
+        overflow: auto;
+        background-color:White;
+        border-width: 0px 0px 1px 0px;
+        border-color: gray;
+        border-style: solid;
+      }
+
+      #layerview-left-panel {
+        position: absolute;
+        /*display: inline-block;*/
+        background-color: White;
+        overflow: auto;
+        left: 0px;
+        height: 100%;
+        width: calc(100% - 301px);
+        border-right: 1px solid Gray;
+      }
+
+      #display-list-canvas {
+        display: inline-block;
+      }
+
+      #setting-button {
+        background: url("css/setting.png") !important;
+        background-repeat: no-repeat;
+        border: none;
+        height: 24px;
+        width: 24px;
+      }
+
+      #setting-options {
+        position: absolute;
+        display: none;
+        border: 1px solid gray;
+        background-color: LightGray;
+        width:250px;
+        right: 0px;
+        z-index: 1001;
+        padding: 5px;
+      }
+
+      #setting-options > input {
+        margin: 5px;
+      }
+
+      #main-toolbar {
+        padding: 3px;
+        margin-bottom: 5px;
+      }
+
+      /* Customize jquery UI*/
+      #left-hud-pane .ui-button {
+        cursor: pointer;
+        text-align: center;
+        height: 24px;
+        width: 100px;
+        color: #FFF;
+        border-radius: 4px;
+        border-color: #2E6DA4;
+        background: #337AB7 !important;
+        position: relative;
+        top: 1px;
+      }
+
+      #right-data-pane .ui-button {
+        cursor: pointer;
+        height: 28px;
+        width: 28px;
+        border-color: rgb(180,180,180);
+        background-repeat: no-repeat;
+      }
+
+      .ui-button .ui-button-text {
+        font-size: 15px;
+        line-height: 50%;
+        padding: 1px 5px;
+      }
+
+      .progress-label {
+        text-align: center;
+        left: 50%;
+        font-weight: bold;
+        text-shadow: 1px 1px 0 #ffff;
+      }
+
+      .ui-progressbar {
+        height: 10px;
+      }
+
+      /* Enlarge resizable hit region */
+      .ui-resizable-e {
+        width: 10px;
+      }
+
+      .ui-resizable-s {
+        height: 20px;
+      }
+
+      .ui-dialog .ui-dialog-title {
+        height: 15px;
+        width: 100%;
+        text-align: center;
+        font-size: 15px !important;
+      }
+
+      .no-close .ui-dialog-titlebar-close {
+        display: none;
+      }
+
+      .ui-slider .ui-slider-handle {
+        height: 24px;
+        width: 24px;
+        position: absolute;
+        top: -7px;
+        margin-left:-12px;
+        z-index: 200;
+        background: url(css/slider-button.png);
+        border: none;
+      }
+
+      /* Borrow from bootstrap */
+      #left-hud-pane .button-danger-color {
+        color: #FFF;
+        border-radius: 4px;
+        border-color: #D43F3A;
+        background: #D9534F !important;
+      }
+
+      #overlay {
+        visibility: hidden;
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        width:100%;
+        height:100%;
+        background-color: rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .ui-buttonset {
+        display: inline-block;
+      }
+
+      #zoom-button-set {
+        position: relative;
+        left: 10px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="overlay"></div>
+    <!-- Hud -->
+    <div id="left-hud-pane">
+      <div>
+        <p style="display: inline"> URL </p>
+        <input id="url-address" value="ws://localhost:23456"></input>
+        <button id="connection-btn">Connect</button>
+        <button id="load-file-btn">Load</button>
+        <button id="save-btn">Save</button>
+        <input type="file" id="load-file-input" name="files[]" style="display:none" />
+      </div>
+    </div>
+    <div id="right-hud-pane" align="right">
+      <div id="setting-button">
+      </div>
+      <div id= "setting-options" align="left">
+        <input type="checkbox" id="checktree" checked>Fetch Layer Tree</input><br/>
+        <input type="checkbox" id="checkbuffer" checked>Fetch Layer Buffer</input><br/>
+        <input type="checkbox" id="checkgrid" checked>Draw the gid of Quads</input>
+        <div>
+          Background:&nbsp;
+          <select id="bkgselect">
+            <option selected>Pattern</option>
+            <option>White</option>
+            <option>Black</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- Tree View -->
+    <div id="left-data-pane" class="data-pane ui-widget-content resizable-left">
+      <!--<h3 class="ui-widget-header">Layer Tree</h3>-->
+      <div id="layer-tree-holder" class="resizable-top"></div>
+      <table id="layer-property-table" class="display" cellspacing="0">
+        <thead>
+          <tbody></tbody>
+        </thead>
+      </table>
+    </div>
+    <!-- Buffer View -->
+    <div id="right-data-pane" class="data-pane resizable-right">
+      <!--<h3 class="ui-widget-header">Layer Image</h3>-->
+      <div id="tool-bar" class="ui-widget-header">
+        <div id="view-button-set">
+          <button id="texture-view"></button>
+          <button id="draw-quad-view"></button>
+          <button id="display-list-view"></button>
+        </div>
+        <div id="zoom-button-set">
+          <button id="zoom-out"></button>
+          <button id="zoom-1-1"></button>
+          <button id="zoom-in"></button>
+        </div>
+        <div id="frame-info"></div>
+        <div id="frame-slider"></div>
+      </div>
+      <div id="renderer-holder"></div>
+    </div>
+  </body>
+</html>
